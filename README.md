@@ -5,6 +5,9 @@ application up and running.
 
 Things you may want to cover:
 
+* Installed gems:
+- httparty - Simpler http requests and automatic json parse
+
 * Ruby version
 
 * System dependencies
