@@ -9,28 +9,48 @@ class WeatherController < ApplicationController
       weather_data = HistoricalWeather.where(location: location, date: start_date...end_date)
       if weather_data.empty?
         # Fetch data from API
-        # TODO: Geocoding to find the coordinates of a location
-        coordinates = { latitude: 38.7167, longitude: -9.1333 } # Lisbon
+        location_coordinates_response = GeocodingService.get_location_coordinates(location)
+
+        # Unexpected error
+        if location_coordinates_response.key?(:error_message)
+          render json: location_coordinates_response
+          return
+        end
+
+        # Location not found
+        if not location_coordinates_response.key?("results")
+          render json: {
+            error: 400,
+            error_message: "Location not found"
+          }
+          return
+        end
+
+        coordinates = {
+          latitude: location_coordinates_response["results"][0]["latitude"], 
+          longitude: location_coordinates_response["results"][0]["longitude"] 
+        }
+        
+        weather_response = WeatherService.get_historical_weather(coordinates, start_date, end_date)
   
-        api_response = WeatherService.get_historical_weather(coordinates, start_date, end_date)
-  
-        if api_response.key?(:error_message)
-          render json: api_response
+        # Unexpected error
+        if weather_response.key?(:error_message)
+          render json: weather_response
           return
         end
   
-        api_response["hourly"]["time"].each_with_index do |hour, index|
+        weather_response["hourly"]["time"].each_with_index do |hour, index|
           HistoricalWeather.create!(
             location: location,
             date: hour,
-            temperature: api_response["hourly"]["temperature_2m"][index],
-            precipitation: api_response["hourly"]["precipitation"][index]
+            temperature: weather_response["hourly"]["temperature_2m"][index],
+            precipitation: weather_response["hourly"]["precipitation"][index]
           )
         end
   
         weather_data = HistoricalWeather.where(location: location, date: start_date...end_date)
       end
-      render json: api_response
+      render json: weather_data
     end
   end
   
