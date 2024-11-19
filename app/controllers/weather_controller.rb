@@ -49,9 +49,15 @@ class WeatherController < ApplicationController
         end
   
         weather_response["daily"]["time"].each_with_index do |day, index|
+
+          isTemperatureNumeric = weather_response["daily"]["temperature_2m_max"][index].is_a?(Numeric) && weather_response["daily"]["temperature_2m_min"][index].is_a?(Numeric)
+
           HistoricalWeather.find_or_create_by(date: day) do |hw|
             hw.location = location
-            hw.temperature = (weather_response["daily"]["temperature_2m_max"][index] + weather_response["daily"]["temperature_2m_min"][index]) / 2 # Average temperature
+            hw.temperature = isTemperatureNumeric ? 
+              (weather_response["daily"]["temperature_2m_max"][index] + weather_response["daily"]["temperature_2m_min"][index]) / 2 # Average temperature
+              :
+              nil
             hw.precipitation = weather_response["daily"]["precipitation_probability_max"][index]
           end
         end
