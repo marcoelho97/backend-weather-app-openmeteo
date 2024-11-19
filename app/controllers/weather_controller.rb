@@ -11,6 +11,12 @@ class WeatherController < ApplicationController
 
       parsed_start_date = Date.parse(start_date).beginning_of_day
       parsed_end_date = Date.parse(end_date).end_of_day
+
+      # Switch start and end date if end date comes before start date
+      if parsed_start_date > parsed_end_date 
+        parsed_start_date, parsed_end_date = parsed_end_date, parsed_start_date
+        start_date, end_date = end_date, start_date
+      end
   
       # Date range for the multiple records of dates
       weather_data = HistoricalWeather.where(location: location, date: parsed_start_date..parsed_end_date).order(:date)
