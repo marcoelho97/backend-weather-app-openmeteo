@@ -4,9 +4,13 @@ class WeatherController < ApplicationController
       location = params[:location]
       start_date = params[:start_date]
       end_date = params[:end_date]
+
+      parsed_start_date = Date.parse(start_date).beginning_of_day
+      parsed_end_date = Date.parse(end_date).end_of_day
   
       # Date range for the multiple records of dates
-      weather_data = HistoricalWeather.where(location: location, date: start_date...end_date)
+      weather_data = HistoricalWeather.where(location: location, date: parsed_start_date...parsed_end_date)
+
       if weather_data.empty?
         # Fetch data from API
         location_coordinates_response = GeocodingService.get_location_coordinates(location)
@@ -39,16 +43,16 @@ class WeatherController < ApplicationController
           return
         end
   
-        weather_response["hourly"]["time"].each_with_index do |hour, index|
+        weather_response["daily"]["time"].each_with_index do |day, index|
           HistoricalWeather.create!(
             location: location,
-            date: hour,
-            temperature: weather_response["hourly"]["temperature_2m"][index],
-            precipitation: weather_response["hourly"]["precipitation"][index]
+            date: day,
+            temperature: (weather_response["daily"]["temperature_2m_max"][index] + weather_response["daily"]["temperature_2m_min"][index]) / 2, # Average temperature
+            precipitation: weather_response["daily"]["precipitation_probability_max"][index]
           )
         end
   
-        weather_data = HistoricalWeather.where(location: location, date: start_date...end_date)
+        weather_data = HistoricalWeather.where(location: location, date: parsed_start_date..parsed_end_date)
       end
       render json: weather_data
     end
