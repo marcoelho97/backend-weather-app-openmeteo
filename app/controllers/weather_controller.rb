@@ -11,6 +11,12 @@ class WeatherController < ApplicationController
 
       parsed_start_date = Date.parse(start_date).beginning_of_day
       parsed_end_date = Date.parse(end_date).end_of_day
+
+      # Switch start and end date if end date comes before start date
+      if parsed_start_date > parsed_end_date 
+        parsed_start_date, parsed_end_date = parsed_end_date, parsed_start_date
+        start_date, end_date = end_date, start_date
+      end
   
       # Date range for the multiple records of dates
       weather_data = HistoricalWeather.where(location: location, date: parsed_start_date..parsed_end_date).order(:date)
@@ -49,9 +55,15 @@ class WeatherController < ApplicationController
         end
   
         weather_response["daily"]["time"].each_with_index do |day, index|
-          HistoricalWeather.find_or_create_by(date: day) do |hw|
+
+          isTemperatureNumeric = weather_response["daily"]["temperature_2m_max"][index].is_a?(Numeric) && weather_response["daily"]["temperature_2m_min"][index].is_a?(Numeric)
+
+          HistoricalWeather.find_or_create_by(location: location, date: day) do |hw|
             hw.location = location
-            hw.temperature = (weather_response["daily"]["temperature_2m_max"][index] + weather_response["daily"]["temperature_2m_min"][index]) / 2 # Average temperature
+            hw.temperature = isTemperatureNumeric ? 
+              (weather_response["daily"]["temperature_2m_max"][index] + weather_response["daily"]["temperature_2m_min"][index]) / 2 # Average temperature
+              :
+              nil
             hw.precipitation = weather_response["daily"]["precipitation_probability_max"][index]
           end
         end
