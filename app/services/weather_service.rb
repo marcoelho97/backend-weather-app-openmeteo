@@ -11,7 +11,7 @@ class WeatherService
       longitude: location[:longitude],
       start_date: start_date,
       end_date: end_date,
-      hourly: "temperature_2m,precipitation"
+      daily: "temperature_2m_max,temperature_2m_min,precipitation_probability_max"
     }
     response = get("/v1/forecast", query: query)
     if response.success?
