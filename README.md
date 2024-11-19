@@ -28,7 +28,7 @@ Setup Instructions
 
 ```bash
 git clone <This repository url>
-cd weather-info-app
+cd backend-weather-app-openmeteo
 ```
 
 ### 2\. Install Dependencies
