@@ -52,7 +52,7 @@ class WeatherController < ApplicationController
 
           isTemperatureNumeric = weather_response["daily"]["temperature_2m_max"][index].is_a?(Numeric) && weather_response["daily"]["temperature_2m_min"][index].is_a?(Numeric)
 
-          HistoricalWeather.find_or_create_by(date: day) do |hw|
+          HistoricalWeather.find_or_create_by(location: location, date: day) do |hw|
             hw.location = location
             hw.temperature = isTemperatureNumeric ? 
               (weather_response["daily"]["temperature_2m_max"][index] + weather_response["daily"]["temperature_2m_min"][index]) / 2 # Average temperature
